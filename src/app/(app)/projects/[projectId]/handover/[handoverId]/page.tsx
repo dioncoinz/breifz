@@ -49,7 +49,7 @@ export default async function HandoverLogDetailPage({
   const notesText = typeof handover.notes === "string" ? handover.notes : "";
   const titleLine = notesText
     .split("\n")
-    .find((line) => line.trim().startsWith("Handover:"));
+    .find((line: string) => line.trim().startsWith("Handover:"));
   const title = titleLine ? titleLine.replace("Handover:", "").trim() : "Handover log";
 
   const { data: photos } = await supabase
