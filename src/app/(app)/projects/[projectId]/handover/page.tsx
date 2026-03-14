@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import SpeechToTextButton from "@/components/SpeechToTextButton";
 import { formatDateDDMMYYYY } from "@/lib/date";
@@ -41,9 +41,13 @@ export default function ProjectHandoverPage() {
   const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const supabase = createSupabaseBrowser();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editHandoverId = searchParams.get("edit");
 
   const [projectName, setProjectName] = useState("");
   const [notes, setNotes] = useState("");
+  const [delays, setDelays] = useState("");
+  const [followUpRequired, setFollowUpRequired] = useState("");
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [savedPhotos, setSavedPhotos] = useState<SavedPhotoItem[]>([]);
   const [handoverDate, setHandoverDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -76,7 +80,7 @@ export default function ProjectHandoverPage() {
     const signed = await Promise.all(
       rows.map(async (row) => {
         const { data } = await supabase.storage
-          .from("breifz-photos")
+          .from("briefz-photos")
           .createSignedUrl(row.storage_path, 60 * 60);
 
         return {
@@ -89,6 +93,48 @@ export default function ProjectHandoverPage() {
     );
 
     setSavedPhotos(signed);
+  }
+
+  function hydrateHandoverForm(rawNotes: string) {
+    const cleaned = typeof rawNotes === "string" ? rawNotes.replace(`${CURRENT_HANDOVER_MARKER}\n`, "") : "";
+    const lines = cleaned.split("\n");
+    const headerLine = lines.find((line: string) => line.startsWith("Handover:"));
+
+    if (headerLine) {
+      const match = headerLine.match(
+        /Handover:\s*([0-9]{2}\/[0-9]{2}\/[0-9]{4}|[0-9]{4}-[0-9]{2}-[0-9]{2})\s*-\s*(Days|Nights)/i
+      );
+      if (match) {
+        const [dd, mm, yyyy] = match[1].includes("/")
+          ? match[1].split("/")
+          : [match[1].slice(8, 10), match[1].slice(5, 7), match[1].slice(0, 4)];
+        setHandoverDate(`${yyyy}-${mm}-${dd}`);
+        setShift(match[2].toLowerCase() === "nights" ? "nights" : "days");
+      }
+    }
+
+    const body = cleaned
+      .split("\n")
+      .filter(
+        (line: string) =>
+          !line.startsWith("Handover:") &&
+          !line.startsWith("Delays:") &&
+          !line.startsWith("Follow-up required:") &&
+          !line.startsWith("[Photo ")
+      )
+      .join("\n")
+      .trim();
+    setNotes(body);
+
+    const delaysLine = cleaned
+      .split("\n")
+      .find((line: string) => line.trim().startsWith("Delays:"));
+    setDelays(delaysLine ? delaysLine.replace("Delays:", "").trim() : "");
+
+    const followUpLine = cleaned
+      .split("\n")
+      .find((line: string) => line.trim().startsWith("Follow-up required:"));
+    setFollowUpRequired(followUpLine ? followUpLine.replace("Follow-up required:", "").trim() : "");
   }
 
   useEffect(() => {
@@ -118,6 +164,23 @@ export default function ProjectHandoverPage() {
 
       if (project?.name && active) setProjectName(project.name);
 
+      if (editHandoverId) {
+        const { data: existing } = await supabase
+          .from("handovers")
+          .select("id, notes")
+          .eq("tenant_id", profile.tenant_id)
+          .eq("project_id", projectId)
+          .eq("id", editHandoverId)
+          .single();
+
+        if (!existing || !active) return;
+
+        setCurrentHandoverId(existing.id);
+        hydrateHandoverForm(existing.notes || "");
+        await loadSavedPhotos(profile.tenant_id, existing.id);
+        return;
+      }
+
       // Load in-progress current handover draft for this user/project if one exists.
       const { data: currentRows } = await supabase
         .from("handovers")
@@ -136,29 +199,7 @@ export default function ProjectHandoverPage() {
       }
 
       setCurrentHandoverId(current.id);
-
-      const cleaned = typeof current.notes === "string" ? current.notes.replace(`${CURRENT_HANDOVER_MARKER}\n`, "") : "";
-      const lines = cleaned.split("\n");
-      const headerLine = lines.find((line: string) => line.startsWith("Handover:"));
-      if (headerLine) {
-        const match = headerLine.match(
-          /Handover:\s*([0-9]{2}\/[0-9]{2}\/[0-9]{4}|[0-9]{4}-[0-9]{2}-[0-9]{2})\s*-\s*(Days|Nights)/i
-        );
-        if (match) {
-          const [dd, mm, yyyy] = match[1].includes("/")
-            ? match[1].split("/")
-            : [match[1].slice(8, 10), match[1].slice(5, 7), match[1].slice(0, 4)];
-          setHandoverDate(`${yyyy}-${mm}-${dd}`);
-          setShift(match[2].toLowerCase() === "nights" ? "nights" : "days");
-        }
-      }
-
-      const body = cleaned
-        .split("\n")
-        .filter((line: string) => !line.startsWith("Handover:") && !line.startsWith("[Photo "))
-        .join("\n")
-        .trim();
-      setNotes(body);
+      hydrateHandoverForm(current.notes || "");
 
       await loadSavedPhotos(profile.tenant_id, current.id);
     }
@@ -167,7 +208,7 @@ export default function ProjectHandoverPage() {
     return () => {
       active = false;
     };
-  }, [projectId, supabase]);
+  }, [editHandoverId, projectId, supabase]);
 
   function appendTranscript(text: string) {
     setNotes((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${text}` : text));
@@ -200,11 +241,24 @@ export default function ProjectHandoverPage() {
     const handoverTitle = `${formatDateDDMMYYYY(handoverDate)} - ${shift === "days" ? "Days" : "Nights"}`;
     const lines: string[] = [`Handover: ${handoverTitle}`];
 
+    if (delays.trim()) {
+      lines.push(`Delays: ${delays.trim()}`);
+    }
+
+    if (followUpRequired.trim()) {
+      lines.push(`Follow-up required: ${followUpRequired.trim()}`);
+    }
+
     const body = notes.trim();
     if (body) lines.push(body);
 
+    savedPhotos.forEach((photo, idx) => {
+      lines.push(`[Photo ${idx + 1}] ${photo.caption?.trim() || photo.storagePath.split("/").pop() || "photo"}`);
+    });
+
     photos.forEach((photo, idx) => {
-      lines.push(`[Photo ${idx + 1}] ${photo.caption.trim() || photo.file.name}`);
+      const photoNumber = savedPhotos.length + idx + 1;
+      lines.push(`[Photo ${photoNumber}] ${photo.caption.trim() || photo.file.name}`);
     });
 
     return lines.join("\n\n");
@@ -222,7 +276,7 @@ export default function ProjectHandoverPage() {
     for (const photo of photosToUpload) {
       const sanitized = safeFileName(photo.file.name);
       const path = `tenant/${tenantId}/projects/${projectId}/handover/${handoverId}/${crypto.randomUUID()}-${sanitized}`;
-      const { error: uploadError } = await supabase.storage.from("breifz-photos").upload(path, photo.file);
+      const { error: uploadError } = await supabase.storage.from("briefz-photos").upload(path, photo.file);
 
       if (uploadError) {
         throw new Error(`Photo upload failed: ${uploadError.message}`);
@@ -279,6 +333,7 @@ export default function ProjectHandoverPage() {
 
   async function onSaveCurrent() {
     if (!projectId) return;
+    if (editHandoverId) return;
 
     setCurrentLoading(true);
     setError(null);
@@ -440,10 +495,14 @@ export default function ProjectHandoverPage() {
 
     photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
     setLoading(false);
+    setDelays("");
+    setFollowUpRequired("");
     setNotes("");
     setPhotos([]);
     setCurrentHandoverId(null);
+    setSavedPhotos([]);
     setSuccess("Handover saved.");
+    router.push(`/projects/${projectId}`);
     router.refresh();
   }
 
@@ -454,7 +513,7 @@ export default function ProjectHandoverPage() {
       {currentHandoverId && (
         <div style={{ color: "#116611", fontWeight: 800, marginTop: 4 }}>
           <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#1dbf50", marginRight: 8 }} />
-          Current handover in progress
+          {editHandoverId ? "Editing saved handover" : "Current handover in progress"}
         </div>
       )}
 
@@ -510,6 +569,42 @@ export default function ProjectHandoverPage() {
       </div>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 12, marginTop: 16 }}>
+        <label style={{ fontWeight: 900 }}>
+          Delays
+          <textarea
+            value={delays}
+            onChange={(e) => setDelays(e.target.value)}
+            rows={3}
+            placeholder="List any delays, hold-ups, access issues, weather impacts, or waiting items..."
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              marginTop: 6,
+              resize: "vertical",
+            }}
+          />
+        </label>
+
+        <label style={{ fontWeight: 900 }}>
+          Follow-up required
+          <textarea
+            value={followUpRequired}
+            onChange={(e) => setFollowUpRequired(e.target.value)}
+            rows={3}
+            placeholder="Capture any follow-up actions, outstanding items, or checks needed next shift..."
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              marginTop: 6,
+              resize: "vertical",
+            }}
+          />
+        </label>
+
         <label style={{ fontWeight: 900 }}>
           Running log
           <textarea
@@ -575,22 +670,24 @@ export default function ProjectHandoverPage() {
         {success && <div style={{ color: "green", fontWeight: 800 }}>{success}</div>}
 
         <div style={{ display: "flex", gap: 10 }}>
-          <button
-            type="button"
-            onClick={onSaveCurrent}
-            disabled={currentLoading || loading}
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              border: "1px solid #1dbf50",
-              background: "#e9f9ef",
-              color: "#116611",
-              fontWeight: 900,
-              cursor: "pointer",
-            }}
-          >
-            {currentLoading ? "Saving current..." : "Save current"}
-          </button>
+          {!editHandoverId && (
+            <button
+              type="button"
+              onClick={onSaveCurrent}
+              disabled={currentLoading || loading}
+              style={{
+                padding: 12,
+                borderRadius: 12,
+                border: "1px solid #1dbf50",
+                background: "#e9f9ef",
+                color: "#116611",
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              {currentLoading ? "Saving current..." : "Save current"}
+            </button>
+          )}
 
           <button
             disabled={loading || currentLoading}
@@ -604,7 +701,7 @@ export default function ProjectHandoverPage() {
               cursor: "pointer",
             }}
           >
-            {loading ? "Saving..." : currentHandoverId ? "Finalize handover" : "Save handover"}
+            {loading ? "Saving..." : editHandoverId ? "Update handover" : currentHandoverId ? "Finalize handover" : "Save handover"}
           </button>
         </div>
 

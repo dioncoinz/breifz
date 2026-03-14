@@ -40,7 +40,7 @@ export async function POST(
   if ((photos || []).length > 0) {
     const paths = photos!.map((p) => p.storage_path).filter(Boolean);
     if (paths.length) {
-      await supabase.storage.from("breifz-photos").remove(paths);
+      await supabase.storage.from("briefz-photos").remove(paths);
     }
   }
 

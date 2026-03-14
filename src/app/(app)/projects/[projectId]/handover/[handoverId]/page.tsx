@@ -64,7 +64,7 @@ export default async function HandoverLogDetailPage({
     const signed = await Promise.all(
       (photos || []).map(async (photo) => {
         const { data } = await supabase.storage
-          .from("breifz-photos")
+          .from("briefz-photos")
           .createSignedUrl(photo.storage_path, 60 * 60);
         return { id: photo.id, url: data?.signedUrl || null };
       })
@@ -121,7 +121,10 @@ export default async function HandoverLogDetailPage({
         </div>
       </section>
 
-      <div style={{ marginTop: 18 }}>
+      <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <Link href={`/projects/${project.id}/handover?edit=${handover.id}`} className="action-link action-primary">
+          Edit handover
+        </Link>
         <Link href={`/projects/${project.id}`} className="action-link">
           Back to project
         </Link>

@@ -1,6 +1,6 @@
-# Breifz MVP
+# Briefz MVP
 
-Breifz is a Next.js + Supabase app for project-based supervisor handovers and prestart meetings.
+Briefz is a Next.js + Supabase app for project-based supervisor handovers and prestart meetings.
 
 ## Current MVP flow
 
@@ -13,7 +13,7 @@ Breifz is a Next.js + Supabase app for project-based supervisor handovers and pr
   - Archive action
 - Supervisor handover form:
   - notes
-  - photo uploads to Supabase Storage bucket `breifz-photos`
+  - photo uploads to Supabase Storage bucket `briefz-photos`
 - Prestart page:
   - latest handovers from last 24h
   - handover summary + extra fields
@@ -57,7 +57,7 @@ This creates:
 - `tenants`, `profiles`, `projects`, `handovers`, `handover_photos`, `prestarts`
 - template tables for phase 2 (`templates`, `template_entries`)
 - RLS tenant-scoped policies
-- storage bucket and policies for `breifz-photos`
+- storage bucket and policies for `briefz-photos`
 
 ## Dev
 

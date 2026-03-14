@@ -23,7 +23,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
 
   const { data: actorProfile } = await supabase
     .from("profiles")
-    .select("tenant_id, role, full_name")
+    .select("tenant_id, full_name")
     .eq("id", user.id)
     .single();
 
@@ -38,26 +38,11 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
     );
   }
 
-  if (actorProfile.role !== "admin") {
-    return (
-      <main>
-        <h1 className="section-title">Admin - Users</h1>
-        <p className="status-error" style={{ display: "inline-block" }}>Only users with role `admin` can access this page.</p>
-      </main>
-    );
-  }
-
-  const { data: users } = await supabase
-    .from("profiles")
-    .select("id, full_name, role, created_at")
-    .eq("tenant_id", actorProfile.tenant_id)
-    .order("created_at", { ascending: false });
-
   return (
     <main>
       <h1 className="section-title">Admin - Users</h1>
       <p className="section-subtitle">
-        Create new tenant users. They can sign in immediately with the password you set here.
+        Create new tenant users. New users are created as supervisors and can sign in immediately with the password you set here.
       </p>
 
       {error && <div className="status-error">{error}</div>}
@@ -86,16 +71,6 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           required
           className="field"
         />
-        <select
-          name="role"
-          defaultValue="supervisor"
-          className="field"
-        >
-          <option value="supervisor">supervisor</option>
-          <option value="manager">manager</option>
-          <option value="admin">admin</option>
-        </select>
-
         <button
           type="submit"
           className="action-button action-primary"
@@ -104,18 +79,6 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           Add user
         </button>
       </form>
-
-      <h2 style={{ marginTop: 30, marginBottom: 8, fontSize: 20, fontWeight: 900 }}>Tenant users</h2>
-      <div style={{ display: "grid", gap: 10 }}>
-        {(users || []).map((u) => (
-          <div key={u.id} className="panel" style={{ padding: 14, display: "grid", gap: 4 }}>
-            <div style={{ fontWeight: 800 }}>{u.full_name}</div>
-            <div className="muted">Role: {u.role || "n/a"}</div>
-            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>User ID: {u.id}</div>
-          </div>
-        ))}
-        {(users || []).length === 0 && <div className="muted">No users found for this tenant yet.</div>}
-      </div>
     </main>
   );
 }

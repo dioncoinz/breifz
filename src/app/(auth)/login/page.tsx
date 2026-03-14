@@ -46,7 +46,7 @@ function LoginPageContent() {
   return (
     <main className="page-shell" style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
       <section className="panel form-card" style={{ maxWidth: 460, width: "100%" }}>
-      <h1 style={{ fontSize: 30, fontWeight: 900, margin: 0 }}>Breifz</h1>
+      <h1 style={{ fontSize: 30, fontWeight: 900, margin: 0 }}>Briefz</h1>
       <p className="section-subtitle">
         Prestarts + Supervisor handovers, project-based.
       </p>

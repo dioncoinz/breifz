@@ -1,4 +1,4 @@
--- Breifz MVP schema
+-- Briefz MVP schema
 create extension if not exists pgcrypto;
 
 create table if not exists public.tenants (
@@ -155,14 +155,14 @@ using (tenant_id = public.current_tenant_id())
 with check (tenant_id = public.current_tenant_id());
 
 insert into storage.buckets (id, name, public)
-values ('breifz-photos', 'breifz-photos', false)
+values ('briefz-photos', 'briefz-photos', false)
 on conflict (id) do nothing;
 
 drop policy if exists "tenant photos read" on storage.objects;
 create policy "tenant photos read" on storage.objects
 for select to authenticated
 using (
-  bucket_id = 'breifz-photos'
+  bucket_id = 'briefz-photos'
   and (storage.foldername(name))[1] = 'tenant'
   and (storage.foldername(name))[2] = public.current_tenant_id()::text
 );
@@ -171,7 +171,7 @@ drop policy if exists "tenant photos insert" on storage.objects;
 create policy "tenant photos insert" on storage.objects
 for insert to authenticated
 with check (
-  bucket_id = 'breifz-photos'
+  bucket_id = 'briefz-photos'
   and (storage.foldername(name))[1] = 'tenant'
   and (storage.foldername(name))[2] = public.current_tenant_id()::text
 );
@@ -180,12 +180,12 @@ drop policy if exists "tenant photos update" on storage.objects;
 create policy "tenant photos update" on storage.objects
 for update to authenticated
 using (
-  bucket_id = 'breifz-photos'
+  bucket_id = 'briefz-photos'
   and (storage.foldername(name))[1] = 'tenant'
   and (storage.foldername(name))[2] = public.current_tenant_id()::text
 )
 with check (
-  bucket_id = 'breifz-photos'
+  bucket_id = 'briefz-photos'
   and (storage.foldername(name))[1] = 'tenant'
   and (storage.foldername(name))[2] = public.current_tenant_id()::text
 );
@@ -194,7 +194,7 @@ drop policy if exists "tenant photos delete" on storage.objects;
 create policy "tenant photos delete" on storage.objects
 for delete to authenticated
 using (
-  bucket_id = 'breifz-photos'
+  bucket_id = 'briefz-photos'
   and (storage.foldername(name))[1] = 'tenant'
   and (storage.foldername(name))[2] = public.current_tenant_id()::text
 );

@@ -6,8 +6,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="page-shell">
       <header className="topbar">
         <Link href="/projects" className="brand-link">
-          <span className="brand-mark" aria-hidden="true" />
-          Breifz
+          Briefz
         </Link>
 
         <nav className="nav-actions">

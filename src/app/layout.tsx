@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Breifz",
+  title: "Briefz",
   description: "Project-based prestarts and supervisor handovers",
 };
 
@@ -28,7 +28,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-        <footer className="site-footer">Breifz - Built by Valeron</footer>
+        <footer className="site-footer">Briefz - Built by Valeron</footer>
       </body>
     </html>
   );

@@ -42,12 +42,43 @@ export default async function ProjectsPage() {
 
       <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
         {(projects || []).map((p) => (
-          <Link key={p.id} href={`/projects/${p.id}`} className="card-link">
-            <div className="card-link-title">{p.name}</div>
-            <div className="muted" style={{ marginTop: 4 }}>
-              {formatDateDDMMYYYY(p.start_date)} - {formatDateDDMMYYYY(p.end_date)}
-            </div>
-          </Link>
+          <div key={p.id} style={{ display: "flex", gap: 10, alignItems: "stretch" }}>
+            <Link href={`/projects/${p.id}`} className="card-link" style={{ flex: 1 }}>
+              <div className="card-link-title">{p.name}</div>
+              <div className="muted" style={{ marginTop: 4 }}>
+                {formatDateDDMMYYYY(p.start_date)} - {formatDateDDMMYYYY(p.end_date)}
+              </div>
+            </Link>
+
+            <form action={`/api/projects/${p.id}/delete`} method="post">
+              <button
+                type="submit"
+                className="action-button action-danger"
+                aria-label={`Delete ${p.name}`}
+                title={`Delete ${p.name}`}
+                style={{ width: 48, minHeight: "100%", padding: 0 }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  width="18"
+                  height="18"
+                  aria-hidden="true"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                </svg>
+              </button>
+            </form>
+          </div>
         ))}
 
         {(projects || []).length === 0 && (
