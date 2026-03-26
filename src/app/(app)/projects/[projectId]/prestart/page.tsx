@@ -93,9 +93,17 @@ export default function ProjectPrestartPage() {
   const [shift, setShift] = useState<"days" | "nights">("days");
   const [attendees, setAttendees] = useState<string[]>([]);
   const [attendeeInput, setAttendeeInput] = useState("");
-  const [weather, setWeather] = useState("");
-  const [focus, setFocus] = useState("");
-  const [workForShift, setWorkForShift] = useState("");
+  const [incidentReview, setIncidentReview] = useState("");
+  const [incidentCause, setIncidentCause] = useState("");
+  const [incidentLessons, setIncidentLessons] = useState("");
+  const [incidentPrevention, setIncidentPrevention] = useState("");
+  const [unsafeConditions, setUnsafeConditions] = useState("");
+  const [unsafeActs, setUnsafeActs] = useState("");
+  const [hazardsToBeAwareOf, setHazardsToBeAwareOf] = useState("");
+  const [changesToBeAwareOf, setChangesToBeAwareOf] = useState("");
+  const [safetyPositives, setSafetyPositives] = useState("");
+  const [todaysScopeOfWork, setTodaysScopeOfWork] = useState("");
+  const [toolboxAgendaItems, setToolboxAgendaItems] = useState("");
   const [extraNotes, setExtraNotes] = useState("");
   const [meetingTranscript, setMeetingTranscript] = useState("");
 
@@ -248,9 +256,17 @@ export default function ProjectPrestartPage() {
     const notes = [
       `Prestart: ${prestartTitle}`,
       attendeeSummary ? `Attendees: ${attendeeSummary}` : null,
-      weather ? `Weather: ${weather}` : null,
-      focus ? `Safety focus: ${focus}` : null,
-      workForShift ? `Work for the shift: ${workForShift}` : null,
+      incidentReview ? `Incident review: ${incidentReview}` : null,
+      incidentCause ? `Why did it happen?: ${incidentCause}` : null,
+      incidentLessons ? `What are our free lessons?: ${incidentLessons}` : null,
+      incidentPrevention ? `How can we prevent it from happening again?: ${incidentPrevention}` : null,
+      unsafeConditions ? `Unsafe conditions: ${unsafeConditions}` : null,
+      unsafeActs ? `Unsafe acts: ${unsafeActs}` : null,
+      hazardsToBeAwareOf ? `Hazards to be aware of: ${hazardsToBeAwareOf}` : null,
+      changesToBeAwareOf ? `Changes to be aware of: ${changesToBeAwareOf}` : null,
+      safetyPositives ? `Safety positives: ${safetyPositives}` : null,
+      todaysScopeOfWork ? `Today's scope of work: ${todaysScopeOfWork}` : null,
+      toolboxAgendaItems ? `Toolbox specific safety agenda items to be discussed: ${toolboxAgendaItems}` : null,
       meetingTranscript ? `Meeting transcript: ${meetingTranscript}` : null,
       extraNotes ? `Extra notes: ${extraNotes}` : null,
     ]
@@ -397,47 +413,228 @@ export default function ProjectPrestartPage() {
           </div>
         </label>
 
-        <label style={{ fontWeight: 800 }}>
-          Weather / conditions
-          <input
-            value={weather}
-            onChange={(e) => setWeather(e.target.value)}
-            placeholder="Clear, windy, wet ground"
-            style={{ display: "block", width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ddd", marginTop: 6 }}
-          />
-        </label>
+        <section className="panel" style={{ padding: 18, display: "grid", gap: 12 }}>
+          <div style={{ fontWeight: 900, fontSize: 18 }}>
+            INCIDENT REVIEW
+          </div>
 
-        <label style={{ fontWeight: 800 }}>
-          Safety focus
-          <input
-            value={focus}
-            onChange={(e) => setFocus(e.target.value)}
-            placeholder="Main tasks / risks"
-            style={{ display: "block", width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ddd", marginTop: 6 }}
-          />
-        </label>
+          <label style={{ display: "block", fontWeight: 800 }}>
+            Did we have a safe day or safe shift yesterday? If not, what happened and has an incident/hazard report been completed?
+            <textarea
+              rows={5}
+              value={incidentReview}
+              onChange={(e) => setIncidentReview(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
 
-        <label style={{ fontWeight: 800 }}>
-          Work for the shift
-          <textarea
-            rows={4}
-            value={workForShift}
-            onChange={(e) => setWorkForShift(e.target.value)}
-            style={{
-              width: "100%",
-              padding: 10,
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              marginTop: 6,
-              resize: "vertical",
-            }}
-            placeholder="Planned works, priorities, and key activities for this shift..."
-          />
-          <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setWorkForShift, text)}
-            disabled={saving}
-          />
-        </label>
+          <label style={{ display: "block", fontWeight: 800 }}>
+            Why did it happen?
+            <textarea
+              rows={3}
+              value={incidentCause}
+              onChange={(e) => setIncidentCause(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
+
+          <label style={{ display: "block", fontWeight: 800 }}>
+            What are our free lessons?
+            <textarea
+              rows={3}
+              value={incidentLessons}
+              onChange={(e) => setIncidentLessons(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
+
+          <label style={{ display: "block", fontWeight: 800 }}>
+            How can we prevent it from happening again?
+            <textarea
+              rows={3}
+              value={incidentPrevention}
+              onChange={(e) => setIncidentPrevention(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
+        </section>
+
+        <section className="panel" style={{ padding: 18, display: "grid", gap: 12 }}>
+          <div style={{ fontWeight: 900, fontSize: 18 }}>
+            ANY SAFETY ISSUES FROM THE PREVIOUS DAY / SHIFT?
+          </div>
+
+          <label style={{ display: "block", fontWeight: 800 }}>
+            Unsafe conditions (work surroundings / equipment / environmental)?
+            <textarea
+              rows={4}
+              value={unsafeConditions}
+              onChange={(e) => setUnsafeConditions(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
+
+          <label style={{ display: "block", fontWeight: 800 }}>
+            Unsafe acts (risk-taking, poor behaviour / attitude, being fatigued / stressed, medication causing drowsiness)?
+            <textarea
+              rows={4}
+              value={unsafeActs}
+              onChange={(e) => setUnsafeActs(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
+        </section>
+
+        <section className="panel" style={{ padding: 18, display: "grid", gap: 12 }}>
+          <div style={{ fontWeight: 900, fontSize: 18 }}>
+            ANY HAZARDS OR CHANGES IN THE WORKPLACE, EQUIPMENT OR THE ENVIRONMENT?
+          </div>
+
+          <label style={{ display: "block", fontWeight: 800 }}>
+            Work surroundings / equipment / environmental / chemical hazards to be aware of:
+            <textarea
+              rows={4}
+              value={hazardsToBeAwareOf}
+              onChange={(e) => setHazardsToBeAwareOf(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
+
+          <label style={{ display: "block", fontWeight: 800 }}>
+            Changes to be aware of:
+            <textarea
+              rows={4}
+              value={changesToBeAwareOf}
+              onChange={(e) => setChangesToBeAwareOf(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
+        </section>
+
+        <section className="panel" style={{ padding: 18, display: "grid", gap: 12 }}>
+          <div style={{ fontWeight: 900, fontSize: 18 }}>
+            ANY SAFETY POSITIVES / POSITIVE ACTS TOWARDS ZERO HARM?
+          </div>
+
+          <label style={{ display: "block", fontWeight: 800 }}>
+            Positive observations
+            <textarea
+              rows={4}
+              value={safetyPositives}
+              onChange={(e) => setSafetyPositives(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
+        </section>
+
+        <section className="panel" style={{ padding: 18, display: "grid", gap: 12 }}>
+          <div style={{ fontWeight: 900, fontSize: 18 }}>
+            TODAY&apos;S SCOPE OF WORK
+          </div>
+
+          <label style={{ display: "block", fontWeight: 800 }}>
+            Scope for today
+            <textarea
+              rows={4}
+              value={todaysScopeOfWork}
+              onChange={(e) => setTodaysScopeOfWork(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
+        </section>
+
+        <section className="panel" style={{ padding: 18, display: "grid", gap: 12 }}>
+          <div style={{ fontWeight: 900, fontSize: 18 }}>
+            TOOLBOX SPECIFIC SAFETY AGENDA ITEMS TO BE DISCUSSED
+          </div>
+
+          <label style={{ display: "block", fontWeight: 800 }}>
+            Agenda items
+            <textarea
+              rows={4}
+              value={toolboxAgendaItems}
+              onChange={(e) => setToolboxAgendaItems(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                marginTop: 10,
+                resize: "vertical",
+              }}
+            />
+          </label>
+        </section>
 
         <label style={{ fontWeight: 800 }}>
           Meeting transcript (speech-to-text)
