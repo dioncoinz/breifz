@@ -45,9 +45,12 @@ export default function ProjectHandoverPage() {
   const editHandoverId = searchParams.get("edit");
 
   const [projectName, setProjectName] = useState("");
-  const [notes, setNotes] = useState("");
-  const [delays, setDelays] = useState("");
-  const [followUpRequired, setFollowUpRequired] = useState("");
+  const [enteringSupervisor, setEnteringSupervisor] = useState("");
+  const [exitingSupervisor, setExitingSupervisor] = useState("");
+  const [safetyFocus, setSafetyFocus] = useState("");
+  const [issuesConcernsPriorities, setIssuesConcernsPriorities] = useState("");
+  const [workStatus, setWorkStatus] = useState("");
+  const [general, setGeneral] = useState("");
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [savedPhotos, setSavedPhotos] = useState<SavedPhotoItem[]>([]);
   const [handoverDate, setHandoverDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -95,10 +98,35 @@ export default function ProjectHandoverPage() {
     setSavedPhotos(signed);
   }
 
+  function extractSection(cleaned: string, label: string, knownLabels: string[]) {
+    const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const otherLabels = knownLabels
+      .filter((item) => item !== label)
+      .map((item) => item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join("|");
+
+    const pattern = otherLabels
+      ? new RegExp(`${escapedLabel}:\\s*([\\s\\S]*?)(?=\\n(?:${otherLabels}):|\\n\\[Photo |$)`)
+      : new RegExp(`${escapedLabel}:\\s*([\\s\\S]*?)(?=\\n\\[Photo |$)`);
+
+    const match = cleaned.match(pattern);
+    return match?.[1]?.trim() || "";
+  }
+
   function hydrateHandoverForm(rawNotes: string) {
     const cleaned = typeof rawNotes === "string" ? rawNotes.replace(`${CURRENT_HANDOVER_MARKER}\n`, "") : "";
     const lines = cleaned.split("\n");
     const headerLine = lines.find((line: string) => line.startsWith("Handover:"));
+    const sectionLabels = [
+      "Entering Supervisor",
+      "Exiting Supervisor",
+      "Safety / focus for the shift / incidents",
+      "Issues / concerns / priorities",
+      "Work status",
+      "General",
+      "Delays",
+      "Follow-up required",
+    ];
 
     if (headerLine) {
       const match = headerLine.match(
@@ -113,28 +141,21 @@ export default function ProjectHandoverPage() {
       }
     }
 
-    const body = cleaned
-      .split("\n")
-      .filter(
-        (line: string) =>
-          !line.startsWith("Handover:") &&
-          !line.startsWith("Delays:") &&
-          !line.startsWith("Follow-up required:") &&
-          !line.startsWith("[Photo ")
-      )
-      .join("\n")
-      .trim();
-    setNotes(body);
+    const newEnteringSupervisor = extractSection(cleaned, "Entering Supervisor", sectionLabels);
+    const newExitingSupervisor = extractSection(cleaned, "Exiting Supervisor", sectionLabels);
+    const newSafetyFocus = extractSection(cleaned, "Safety / focus for the shift / incidents", sectionLabels);
+    const newIssuesConcernsPriorities = extractSection(cleaned, "Issues / concerns / priorities", sectionLabels);
+    const newWorkStatus = extractSection(cleaned, "Work status", sectionLabels);
+    const newGeneral = extractSection(cleaned, "General", sectionLabels);
+    const legacyDelays = extractSection(cleaned, "Delays", sectionLabels);
+    const legacyFollowUpRequired = extractSection(cleaned, "Follow-up required", sectionLabels);
 
-    const delaysLine = cleaned
-      .split("\n")
-      .find((line: string) => line.trim().startsWith("Delays:"));
-    setDelays(delaysLine ? delaysLine.replace("Delays:", "").trim() : "");
-
-    const followUpLine = cleaned
-      .split("\n")
-      .find((line: string) => line.trim().startsWith("Follow-up required:"));
-    setFollowUpRequired(followUpLine ? followUpLine.replace("Follow-up required:", "").trim() : "");
+    setEnteringSupervisor(newEnteringSupervisor);
+    setExitingSupervisor(newExitingSupervisor);
+    setSafetyFocus(newSafetyFocus);
+    setIssuesConcernsPriorities(newIssuesConcernsPriorities || legacyFollowUpRequired);
+    setWorkStatus(newWorkStatus || legacyDelays);
+    setGeneral(newGeneral);
   }
 
   useEffect(() => {
@@ -210,8 +231,8 @@ export default function ProjectHandoverPage() {
     };
   }, [editHandoverId, projectId, supabase]);
 
-  function appendTranscript(text: string) {
-    setNotes((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${text}` : text));
+  function appendTranscript(setter: React.Dispatch<React.SetStateAction<string>>, text: string) {
+    setter((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${text}` : text));
   }
 
   function addPhotos(list: FileList | null) {
@@ -241,16 +262,29 @@ export default function ProjectHandoverPage() {
     const handoverTitle = `${formatDateDDMMYYYY(handoverDate)} - ${shift === "days" ? "Days" : "Nights"}`;
     const lines: string[] = [`Handover: ${handoverTitle}`];
 
-    if (delays.trim()) {
-      lines.push(`Delays: ${delays.trim()}`);
+    if (enteringSupervisor.trim()) {
+      lines.push(`Entering Supervisor: ${enteringSupervisor.trim()}`);
     }
 
-    if (followUpRequired.trim()) {
-      lines.push(`Follow-up required: ${followUpRequired.trim()}`);
+    if (exitingSupervisor.trim()) {
+      lines.push(`Exiting Supervisor: ${exitingSupervisor.trim()}`);
     }
 
-    const body = notes.trim();
-    if (body) lines.push(body);
+    if (safetyFocus.trim()) {
+      lines.push(`Safety / focus for the shift / incidents: ${safetyFocus.trim()}`);
+    }
+
+    if (issuesConcernsPriorities.trim()) {
+      lines.push(`Issues / concerns / priorities: ${issuesConcernsPriorities.trim()}`);
+    }
+
+    if (workStatus.trim()) {
+      lines.push(`Work status: ${workStatus.trim()}`);
+    }
+
+    if (general.trim()) {
+      lines.push(`General: ${general.trim()}`);
+    }
 
     savedPhotos.forEach((photo, idx) => {
       lines.push(`[Photo ${idx + 1}] ${photo.caption?.trim() || photo.storagePath.split("/").pop() || "photo"}`);
@@ -433,7 +467,13 @@ export default function ProjectHandoverPage() {
       return;
     }
 
-    if (!notes.trim() && photos.length === 0) {
+    if (
+      !safetyFocus.trim() &&
+      !issuesConcernsPriorities.trim() &&
+      !workStatus.trim() &&
+      !general.trim() &&
+      photos.length === 0
+    ) {
       setLoading(false);
       setError("Add notes or photos before saving.");
       return;
@@ -495,9 +535,12 @@ export default function ProjectHandoverPage() {
 
     photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
     setLoading(false);
-    setDelays("");
-    setFollowUpRequired("");
-    setNotes("");
+    setEnteringSupervisor("");
+    setExitingSupervisor("");
+    setSafetyFocus("");
+    setIssuesConcernsPriorities("");
+    setWorkStatus("");
+    setGeneral("");
     setPhotos([]);
     setCurrentHandoverId(null);
     setSavedPhotos([]);
@@ -544,6 +587,7 @@ export default function ProjectHandoverPage() {
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
             }}
           />
@@ -559,6 +603,7 @@ export default function ProjectHandoverPage() {
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
             }}
           >
@@ -566,62 +611,135 @@ export default function ProjectHandoverPage() {
             <option value="nights">Nights</option>
           </select>
         </label>
+        <label style={{ fontWeight: 800 }}>
+          Entering Supervisor
+          <input
+            type="text"
+            value={enteringSupervisor}
+            onChange={(e) => setEnteringSupervisor(e.target.value)}
+            placeholder="Enter incoming supervisor name"
+            style={{
+              display: "block",
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              background: "#fff",
+              marginTop: 6,
+            }}
+          />
+        </label>
+        <label style={{ fontWeight: 800 }}>
+          Exiting Supervisor
+          <input
+            type="text"
+            value={exitingSupervisor}
+            onChange={(e) => setExitingSupervisor(e.target.value)}
+            placeholder="Enter outgoing supervisor name"
+            style={{
+              display: "block",
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              background: "#fff",
+              marginTop: 6,
+            }}
+          />
+        </label>
       </div>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 12, marginTop: 16 }}>
         <label style={{ fontWeight: 900 }}>
-          Delays
+          Safety / focus for the shift / incidents
           <textarea
-            value={delays}
-            onChange={(e) => setDelays(e.target.value)}
+            value={safetyFocus}
+            onChange={(e) => setSafetyFocus(e.target.value)}
             rows={3}
-            placeholder="List any delays, hold-ups, access issues, weather impacts, or waiting items..."
+            placeholder="Highlight any safety points, shift focus items, incidents, or critical watch-outs..."
             style={{
               width: "100%",
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
               resize: "vertical",
             }}
+          />
+          <SpeechToTextButton
+            onTranscript={(text) => appendTranscript(setSafetyFocus, text)}
+            disabled={loading || currentLoading}
           />
         </label>
 
         <label style={{ fontWeight: 900 }}>
-          Follow-up required
+          Issues / concerns / priorities
           <textarea
-            value={followUpRequired}
-            onChange={(e) => setFollowUpRequired(e.target.value)}
+            value={issuesConcernsPriorities}
+            onChange={(e) => setIssuesConcernsPriorities(e.target.value)}
             rows={3}
-            placeholder="Capture any follow-up actions, outstanding items, or checks needed next shift..."
+            placeholder="Capture the main issues, concerns, and priority items for the incoming shift..."
             style={{
               width: "100%",
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
               resize: "vertical",
             }}
+          />
+          <SpeechToTextButton
+            onTranscript={(text) => appendTranscript(setIssuesConcernsPriorities, text)}
+            disabled={loading || currentLoading}
           />
         </label>
 
         <label style={{ fontWeight: 900 }}>
-          Running log
+          Work status
           <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={10}
-            placeholder="Write your running handover log here..."
+            value={workStatus}
+            onChange={(e) => setWorkStatus(e.target.value)}
+            rows={4}
+            placeholder="Summarize what has been completed, what is underway, and what is still outstanding..."
             style={{
               width: "100%",
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
               resize: "vertical",
             }}
           />
-          <SpeechToTextButton onTranscript={appendTranscript} disabled={loading} />
+          <SpeechToTextButton
+            onTranscript={(text) => appendTranscript(setWorkStatus, text)}
+            disabled={loading || currentLoading}
+          />
+        </label>
+
+        <label style={{ fontWeight: 900 }}>
+          General
+          <textarea
+            value={general}
+            onChange={(e) => setGeneral(e.target.value)}
+            rows={6}
+            placeholder="Add any other handover notes, context, or general updates here..."
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              background: "#fff",
+              marginTop: 6,
+              resize: "vertical",
+            }}
+          />
+          <SpeechToTextButton
+            onTranscript={(text) => appendTranscript(setGeneral, text)}
+            disabled={loading || currentLoading}
+          />
         </label>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

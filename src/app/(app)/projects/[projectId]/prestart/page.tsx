@@ -91,33 +91,18 @@ export default function ProjectPrestartPage() {
   const [handoverSummary, setHandoverSummary] = useState("");
   const [prestartDate, setPrestartDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [shift, setShift] = useState<"days" | "nights">("days");
-  const [attendees, setAttendees] = useState<string[]>([]);
-  const [attendeeInput, setAttendeeInput] = useState("");
-  const [weather, setWeather] = useState("");
-  const [focus, setFocus] = useState("");
-  const [workForShift, setWorkForShift] = useState("");
+  const [enteringSupervisor, setEnteringSupervisor] = useState("");
+  const [exitingSupervisor, setExitingSupervisor] = useState("");
+  const [safetyPrimary, setSafetyPrimary] = useState("");
+  const [progressUpdate, setProgressUpdate] = useState("");
+  const [currentShift, setCurrentShift] = useState("");
+  const [roundTheRoom, setRoundTheRoom] = useState("");
+  const [safetySecondary, setSafetySecondary] = useState("");
   const [extraNotes, setExtraNotes] = useState("");
   const [meetingTranscript, setMeetingTranscript] = useState("");
 
   function appendTranscript(setter: (fn: (prev: string) => string) => void, text: string) {
     setter((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${text}` : text));
-  }
-
-  function addAttendee() {
-    const name = attendeeInput.trim();
-    if (!name) return;
-
-    setAttendees((prev) => {
-      if (prev.some((entry) => entry.toLowerCase() === name.toLowerCase())) {
-        return prev;
-      }
-      return [...prev, name];
-    });
-    setAttendeeInput("");
-  }
-
-  function removeAttendee(name: string) {
-    setAttendees((prev) => prev.filter((entry) => entry !== name));
   }
 
   const sinceIso = useMemo(() => {
@@ -243,14 +228,16 @@ export default function ProjectPrestartPage() {
     }
 
     const prestartTitle = `${prestartDate} - ${shift === "days" ? "Days" : "Nights"}`;
-    const attendeeSummary = attendees.join(", ");
 
     const notes = [
       `Prestart: ${prestartTitle}`,
-      attendeeSummary ? `Attendees: ${attendeeSummary}` : null,
-      weather ? `Weather: ${weather}` : null,
-      focus ? `Safety focus: ${focus}` : null,
-      workForShift ? `Work for the shift: ${workForShift}` : null,
+      enteringSupervisor ? `Entering Supervisor: ${enteringSupervisor}` : null,
+      exitingSupervisor ? `Exiting Supervisor: ${exitingSupervisor}` : null,
+      safetyPrimary ? `Safety: ${safetyPrimary}` : null,
+      progressUpdate ? `Progress update: ${progressUpdate}` : null,
+      currentShift ? `Current shift: ${currentShift}` : null,
+      roundTheRoom ? `Quick round the room to ensure everyone knows whats going on or any concerns: ${roundTheRoom}` : null,
+      safetySecondary ? `Safety: ${safetySecondary}` : null,
       meetingTranscript ? `Meeting transcript: ${meetingTranscript}` : null,
       extraNotes ? `Extra notes: ${extraNotes}` : null,
     ]
@@ -273,6 +260,13 @@ export default function ProjectPrestartPage() {
     }
 
     setSuccess("Prestart saved.");
+    setEnteringSupervisor("");
+    setExitingSupervisor("");
+    setSafetyPrimary("");
+    setProgressUpdate("");
+    setCurrentShift("");
+    setRoundTheRoom("");
+    setSafetySecondary("");
     setExtraNotes("");
     router.refresh();
   }
@@ -308,6 +302,7 @@ export default function ProjectPrestartPage() {
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
             }}
           />
@@ -323,12 +318,49 @@ export default function ProjectPrestartPage() {
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
             }}
           >
             <option value="days">Days</option>
             <option value="nights">Nights</option>
           </select>
+        </label>
+        <label style={{ fontWeight: 800 }}>
+          Entering Supervisor
+          <input
+            type="text"
+            value={enteringSupervisor}
+            onChange={(e) => setEnteringSupervisor(e.target.value)}
+            placeholder="Enter incoming supervisor name"
+            style={{
+              display: "block",
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              background: "#fff",
+              marginTop: 6,
+            }}
+          />
+        </label>
+        <label style={{ fontWeight: 800 }}>
+          Exiting Supervisor
+          <input
+            type="text"
+            value={exitingSupervisor}
+            onChange={(e) => setExitingSupervisor(e.target.value)}
+            placeholder="Enter outgoing supervisor name"
+            style={{
+              display: "block",
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              background: "#fff",
+              marginTop: 6,
+            }}
+          />
         </label>
       </div>
 
@@ -345,6 +377,7 @@ export default function ProjectPrestartPage() {
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
               resize: "vertical",
             }}
@@ -352,89 +385,116 @@ export default function ProjectPrestartPage() {
         </label>
 
         <label style={{ fontWeight: 800 }}>
-          Attendees
-          <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "stretch" }}>
-            <input
-              value={attendeeInput}
-              onChange={(e) => setAttendeeInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addAttendee();
-                }
-              }}
-              placeholder="Enter a person"
-              className="field"
-              style={{ marginTop: 0 }}
-            />
-            <button
-              type="button"
-              onClick={addAttendee}
-              className="action-button"
-              style={{ whiteSpace: "nowrap" }}
-            >
-              + Add attendee
-            </button>
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-            {attendees.map((name) => (
-              <button
-                key={name}
-                type="button"
-                onClick={() => removeAttendee(name)}
-                className="action-button"
-                style={{ minHeight: 36, padding: "8px 12px" }}
-                title={`Remove ${name}`}
-              >
-                {name} x
-              </button>
-            ))}
-            {attendees.length === 0 && (
-              <span className="muted" style={{ fontWeight: 500 }}>
-                Add each attendee with the plus button.
-              </span>
-            )}
-          </div>
-        </label>
-
-        <label style={{ fontWeight: 800 }}>
-          Weather / conditions
-          <input
-            value={weather}
-            onChange={(e) => setWeather(e.target.value)}
-            placeholder="Clear, windy, wet ground"
-            style={{ display: "block", width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ddd", marginTop: 6 }}
-          />
-        </label>
-
-        <label style={{ fontWeight: 800 }}>
-          Safety focus
-          <input
-            value={focus}
-            onChange={(e) => setFocus(e.target.value)}
-            placeholder="Main tasks / risks"
-            style={{ display: "block", width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ddd", marginTop: 6 }}
-          />
-        </label>
-
-        <label style={{ fontWeight: 800 }}>
-          Work for the shift
+          Safety
           <textarea
             rows={4}
-            value={workForShift}
-            onChange={(e) => setWorkForShift(e.target.value)}
+            value={safetyPrimary}
+            onChange={(e) => setSafetyPrimary(e.target.value)}
             style={{
               width: "100%",
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
               resize: "vertical",
             }}
-            placeholder="Planned works, priorities, and key activities for this shift..."
+            placeholder="Capture key safety items, hazards, controls, and critical reminders..."
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setWorkForShift, text)}
+            onTranscript={(text) => appendTranscript(setSafetyPrimary, text)}
+            disabled={saving}
+          />
+        </label>
+
+        <label style={{ fontWeight: 800 }}>
+          Progress update
+          <textarea
+            rows={4}
+            value={progressUpdate}
+            onChange={(e) => setProgressUpdate(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              background: "#fff",
+              marginTop: 6,
+              resize: "vertical",
+            }}
+            placeholder="Summarize progress made, completed work, and outstanding items..."
+          />
+          <SpeechToTextButton
+            onTranscript={(text) => appendTranscript(setProgressUpdate, text)}
+            disabled={saving}
+          />
+        </label>
+
+        <label style={{ fontWeight: 800 }}>
+          Current shift
+          <textarea
+            rows={4}
+            value={currentShift}
+            onChange={(e) => setCurrentShift(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              background: "#fff",
+              marginTop: 6,
+              resize: "vertical",
+            }}
+            placeholder="Note what this shift is responsible for, key work areas, and priorities..."
+          />
+          <SpeechToTextButton
+            onTranscript={(text) => appendTranscript(setCurrentShift, text)}
+            disabled={saving}
+          />
+        </label>
+
+        <label style={{ fontWeight: 800 }}>
+          Quick round the room to ensure everyone knows whats going on or any concerns
+          <textarea
+            rows={4}
+            value={roundTheRoom}
+            onChange={(e) => setRoundTheRoom(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              background: "#fff",
+              marginTop: 6,
+              resize: "vertical",
+            }}
+            placeholder="Capture team understanding, questions raised, and any concerns shared..."
+          />
+          <SpeechToTextButton
+            onTranscript={(text) => appendTranscript(setRoundTheRoom, text)}
+            disabled={saving}
+          />
+        </label>
+
+        <label style={{ fontWeight: 800 }}>
+          Safety
+          <textarea
+            rows={4}
+            value={safetySecondary}
+            onChange={(e) => setSafetySecondary(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              background: "#fff",
+              marginTop: 6,
+              resize: "vertical",
+            }}
+            placeholder="Add any final safety reminders, checks, or escalation items..."
+          />
+          <SpeechToTextButton
+            onTranscript={(text) => appendTranscript(setSafetySecondary, text)}
             disabled={saving}
           />
         </label>
@@ -450,6 +510,7 @@ export default function ProjectPrestartPage() {
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
               resize: "vertical",
             }}
@@ -503,6 +564,7 @@ export default function ProjectPrestartPage() {
               padding: 10,
               borderRadius: 10,
               border: "1px solid #ddd",
+              background: "#fff",
               marginTop: 6,
               resize: "vertical",
             }}
