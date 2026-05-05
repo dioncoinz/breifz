@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { formatDateTimeAU } from "@/lib/date";
 
 export default async function PrestartLogDetailPage({
   params,
@@ -57,7 +58,7 @@ export default async function PrestartLogDetailPage({
       <h1 className="section-title">{title}</h1>
       <div className="section-subtitle">{project.name}</div>
       <div className="muted" style={{ marginTop: 4 }}>
-        Saved {new Date(prestart.created_at).toLocaleString()}
+        Saved {formatDateTimeAU(prestart.created_at)}
       </div>
 
       <section style={{ marginTop: 16 }}>

@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import SpeechToTextButton from "@/components/SpeechToTextButton";
+import {
+  appendBulletText,
+  handleBulletTextareaChange,
+  handleBulletTextareaKeyDown,
+} from "@/lib/bullets";
 import { formatDateDDMMYYYY } from "@/lib/date";
 
 const CURRENT_HANDOVER_MARKER = "[[CURRENT_HANDOVER]]";
@@ -230,10 +235,6 @@ export default function ProjectHandoverPage() {
       active = false;
     };
   }, [editHandoverId, projectId, supabase]);
-
-  function appendTranscript(setter: React.Dispatch<React.SetStateAction<string>>, text: string) {
-    setter((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${text}` : text));
-  }
 
   function addPhotos(list: FileList | null) {
     if (!list?.length) return;
@@ -654,7 +655,8 @@ export default function ProjectHandoverPage() {
           Safety / focus for the shift / incidents
           <textarea
             value={safetyFocus}
-            onChange={(e) => setSafetyFocus(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setSafetyFocus)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setSafetyFocus)}
             rows={3}
             placeholder="Highlight any safety points, shift focus items, incidents, or critical watch-outs..."
             style={{
@@ -668,7 +670,7 @@ export default function ProjectHandoverPage() {
             }}
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setSafetyFocus, text)}
+            onTranscript={(text) => appendBulletText(setSafetyFocus, text)}
             disabled={loading || currentLoading}
           />
         </label>
@@ -677,7 +679,8 @@ export default function ProjectHandoverPage() {
           Issues / concerns / priorities
           <textarea
             value={issuesConcernsPriorities}
-            onChange={(e) => setIssuesConcernsPriorities(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setIssuesConcernsPriorities)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setIssuesConcernsPriorities)}
             rows={3}
             placeholder="Capture the main issues, concerns, and priority items for the incoming shift..."
             style={{
@@ -691,7 +694,7 @@ export default function ProjectHandoverPage() {
             }}
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setIssuesConcernsPriorities, text)}
+            onTranscript={(text) => appendBulletText(setIssuesConcernsPriorities, text)}
             disabled={loading || currentLoading}
           />
         </label>
@@ -700,7 +703,8 @@ export default function ProjectHandoverPage() {
           Work status
           <textarea
             value={workStatus}
-            onChange={(e) => setWorkStatus(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setWorkStatus)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setWorkStatus)}
             rows={4}
             placeholder="Summarize what has been completed, what is underway, and what is still outstanding..."
             style={{
@@ -714,7 +718,7 @@ export default function ProjectHandoverPage() {
             }}
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setWorkStatus, text)}
+            onTranscript={(text) => appendBulletText(setWorkStatus, text)}
             disabled={loading || currentLoading}
           />
         </label>
@@ -723,7 +727,8 @@ export default function ProjectHandoverPage() {
           General
           <textarea
             value={general}
-            onChange={(e) => setGeneral(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setGeneral)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setGeneral)}
             rows={6}
             placeholder="Add any other handover notes, context, or general updates here..."
             style={{
@@ -737,7 +742,7 @@ export default function ProjectHandoverPage() {
             }}
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setGeneral, text)}
+            onTranscript={(text) => appendBulletText(setGeneral, text)}
             disabled={loading || currentLoading}
           />
         </label>

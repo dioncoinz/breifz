@@ -5,6 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import SpeechToTextButton from "@/components/SpeechToTextButton";
 import MeetingRecorderButton from "@/components/MeetingRecorderButton";
+import {
+  appendBulletText,
+  handleBulletTextareaChange,
+  handleBulletTextareaKeyDown,
+} from "@/lib/bullets";
 import { formatDateDDMMYYYY } from "@/lib/date";
 
 type HandoverItem = {
@@ -100,10 +105,6 @@ export default function ProjectPrestartPage() {
   const [safetySecondary, setSafetySecondary] = useState("");
   const [extraNotes, setExtraNotes] = useState("");
   const [meetingTranscript, setMeetingTranscript] = useState("");
-
-  function appendTranscript(setter: (fn: (prev: string) => string) => void, text: string) {
-    setter((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${text}` : text));
-  }
 
   const sinceIso = useMemo(() => {
     const d = new Date();
@@ -371,7 +372,8 @@ export default function ProjectPrestartPage() {
             required
             rows={6}
             value={handoverSummary}
-            onChange={(e) => setHandoverSummary(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setHandoverSummary)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setHandoverSummary)}
             style={{
               width: "100%",
               padding: 10,
@@ -389,7 +391,8 @@ export default function ProjectPrestartPage() {
           <textarea
             rows={4}
             value={safetyPrimary}
-            onChange={(e) => setSafetyPrimary(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setSafetyPrimary)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setSafetyPrimary)}
             style={{
               width: "100%",
               padding: 10,
@@ -402,7 +405,7 @@ export default function ProjectPrestartPage() {
             placeholder="Capture key safety items, hazards, controls, and critical reminders..."
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setSafetyPrimary, text)}
+            onTranscript={(text) => appendBulletText(setSafetyPrimary, text)}
             disabled={saving}
           />
         </label>
@@ -412,7 +415,8 @@ export default function ProjectPrestartPage() {
           <textarea
             rows={4}
             value={progressUpdate}
-            onChange={(e) => setProgressUpdate(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setProgressUpdate)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setProgressUpdate)}
             style={{
               width: "100%",
               padding: 10,
@@ -425,7 +429,7 @@ export default function ProjectPrestartPage() {
             placeholder="Summarize progress made, completed work, and outstanding items..."
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setProgressUpdate, text)}
+            onTranscript={(text) => appendBulletText(setProgressUpdate, text)}
             disabled={saving}
           />
         </label>
@@ -435,7 +439,8 @@ export default function ProjectPrestartPage() {
           <textarea
             rows={4}
             value={currentShift}
-            onChange={(e) => setCurrentShift(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setCurrentShift)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setCurrentShift)}
             style={{
               width: "100%",
               padding: 10,
@@ -448,7 +453,7 @@ export default function ProjectPrestartPage() {
             placeholder="Note what this shift is responsible for, key work areas, and priorities..."
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setCurrentShift, text)}
+            onTranscript={(text) => appendBulletText(setCurrentShift, text)}
             disabled={saving}
           />
         </label>
@@ -458,7 +463,8 @@ export default function ProjectPrestartPage() {
           <textarea
             rows={4}
             value={roundTheRoom}
-            onChange={(e) => setRoundTheRoom(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setRoundTheRoom)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setRoundTheRoom)}
             style={{
               width: "100%",
               padding: 10,
@@ -471,7 +477,7 @@ export default function ProjectPrestartPage() {
             placeholder="Capture team understanding, questions raised, and any concerns shared..."
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setRoundTheRoom, text)}
+            onTranscript={(text) => appendBulletText(setRoundTheRoom, text)}
             disabled={saving}
           />
         </label>
@@ -481,7 +487,8 @@ export default function ProjectPrestartPage() {
           <textarea
             rows={4}
             value={safetySecondary}
-            onChange={(e) => setSafetySecondary(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setSafetySecondary)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setSafetySecondary)}
             style={{
               width: "100%",
               padding: 10,
@@ -494,7 +501,7 @@ export default function ProjectPrestartPage() {
             placeholder="Add any final safety reminders, checks, or escalation items..."
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setSafetySecondary, text)}
+            onTranscript={(text) => appendBulletText(setSafetySecondary, text)}
             disabled={saving}
           />
         </label>
@@ -504,7 +511,8 @@ export default function ProjectPrestartPage() {
           <textarea
             rows={6}
             value={meetingTranscript}
-            onChange={(e) => setMeetingTranscript(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setMeetingTranscript)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setMeetingTranscript)}
             style={{
               width: "100%",
               padding: 10,
@@ -518,12 +526,12 @@ export default function ProjectPrestartPage() {
           />
           <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
             <MeetingRecorderButton
-              onTranscript={(text) => appendTranscript(setMeetingTranscript, text)}
+              onTranscript={(text) => appendBulletText(setMeetingTranscript, text)}
               disabled={saving}
               maxMinutes={15}
             />
             <SpeechToTextButton
-              onTranscript={(text) => appendTranscript(setMeetingTranscript, text)}
+              onTranscript={(text) => appendBulletText(setMeetingTranscript, text)}
               disabled={saving}
             />
             <button
@@ -558,7 +566,8 @@ export default function ProjectPrestartPage() {
           <textarea
             rows={4}
             value={extraNotes}
-            onChange={(e) => setExtraNotes(e.target.value)}
+            onChange={(e) => handleBulletTextareaChange(e, setExtraNotes)}
+            onKeyDown={(e) => handleBulletTextareaKeyDown(e, setExtraNotes)}
             style={{
               width: "100%",
               padding: 10,
@@ -570,7 +579,7 @@ export default function ProjectPrestartPage() {
             }}
           />
           <SpeechToTextButton
-            onTranscript={(text) => appendTranscript(setExtraNotes, text)}
+            onTranscript={(text) => appendBulletText(setExtraNotes, text)}
             disabled={saving}
           />
         </label>

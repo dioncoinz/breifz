@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { formatDateTimeAU } from "@/lib/date";
 
 export default async function HandoverLogDetailPage({
   params,
@@ -80,7 +81,7 @@ export default async function HandoverLogDetailPage({
       <h1 className="section-title">{title}</h1>
       <div className="section-subtitle">{project.name}</div>
       <div className="muted" style={{ marginTop: 4 }}>
-        Saved {new Date(handover.created_at).toLocaleString()}
+        Saved {formatDateTimeAU(handover.created_at)}
       </div>
 
       <section style={{ marginTop: 16 }}>

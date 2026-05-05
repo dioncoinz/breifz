@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { formatDateDDMMYYYY } from "@/lib/date";
+import { formatDateDDMMYYYY, formatDateTimeAU } from "@/lib/date";
 
 const CURRENT_HANDOVER_MARKER = "[[CURRENT_HANDOVER]]";
 
@@ -131,7 +131,7 @@ export default async function ProjectDetailPage({
                 >
                   <div style={{ fontWeight: 900 }}>{label}</div>
                   <div className="muted" style={{ marginTop: 4 }}>
-                    Saved {new Date(entry.created_at).toLocaleString()}
+                    Saved {formatDateTimeAU(entry.created_at)}
                   </div>
                 </Link>
 
@@ -188,7 +188,7 @@ export default async function ProjectDetailPage({
                 >
                   <div style={{ fontWeight: 900 }}>{label}</div>
                   <div className="muted" style={{ marginTop: 4 }}>
-                    Saved {new Date(entry.created_at).toLocaleString()}
+                    Saved {formatDateTimeAU(entry.created_at)}
                   </div>
                 </Link>
 
