@@ -228,7 +228,7 @@ export default function ProjectPrestartPage() {
       return;
     }
 
-    const prestartTitle = `${prestartDate} - ${shift === "days" ? "Days" : "Nights"}`;
+    const prestartTitle = `${formatDateDDMMYYYY(prestartDate)} - ${shift === "days" ? "Days" : "Nights"}`;
 
     const notes = [
       `Prestart: ${prestartTitle}`,

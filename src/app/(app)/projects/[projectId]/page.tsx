@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { formatDateDDMMYYYY, formatDateTimeAU } from "@/lib/date";
+import { formatDateDDMMYYYY, formatDateTimeAU, formatLogEntryDateDDMMYYYY } from "@/lib/date";
 
 const CURRENT_HANDOVER_MARKER = "[[CURRENT_HANDOVER]]";
 
@@ -115,7 +115,7 @@ export default async function ProjectDetailPage({
             const shiftValue = match?.[2]
               ? match[2][0].toUpperCase() + match[2].slice(1).toLowerCase()
               : "Days";
-            const label = `${formatDateDDMMYYYY(dateValue)} - ${shiftValue}`;
+            const label = `${formatLogEntryDateDDMMYYYY(dateValue, project.start_date, project.end_date)} - ${shiftValue}`;
 
             return (
               <div key={entry.id} className="list-row">
@@ -172,7 +172,7 @@ export default async function ProjectDetailPage({
             const shiftValue = match?.[2]
               ? match[2][0].toUpperCase() + match[2].slice(1).toLowerCase()
               : "Days";
-            const label = `${formatDateDDMMYYYY(dateValue)} - ${shiftValue}`;
+            const label = `${formatLogEntryDateDDMMYYYY(dateValue, project.start_date, project.end_date)} - ${shiftValue}`;
 
             return (
               <div key={entry.id} className="list-row">

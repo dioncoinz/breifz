@@ -9,7 +9,7 @@ import {
   handleBulletTextareaChange,
   handleBulletTextareaKeyDown,
 } from "@/lib/bullets";
-import { formatDateDDMMYYYY } from "@/lib/date";
+import { formatDateDDMMYYYY, formatLogEntryDateDDMMYYYY } from "@/lib/date";
 
 const CURRENT_HANDOVER_MARKER = "[[CURRENT_HANDOVER]]";
 
@@ -118,7 +118,11 @@ export default function ProjectHandoverPage() {
     return match?.[1]?.trim() || "";
   }
 
-  function hydrateHandoverForm(rawNotes: string) {
+  function hydrateHandoverForm(
+    rawNotes: string,
+    projectStartDate?: string | null,
+    projectEndDate?: string | null
+  ) {
     const cleaned = typeof rawNotes === "string" ? rawNotes.replace(`${CURRENT_HANDOVER_MARKER}\n`, "") : "";
     const lines = cleaned.split("\n");
     const headerLine = lines.find((line: string) => line.startsWith("Handover:"));
@@ -138,8 +142,9 @@ export default function ProjectHandoverPage() {
         /Handover:\s*([0-9]{2}\/[0-9]{2}\/[0-9]{4}|[0-9]{4}-[0-9]{2}-[0-9]{2})\s*-\s*(Days|Nights)/i
       );
       if (match) {
-        const [dd, mm, yyyy] = match[1].includes("/")
-          ? match[1].split("/")
+        const formattedDate = formatLogEntryDateDDMMYYYY(match[1], projectStartDate, projectEndDate);
+        const [dd, mm, yyyy] = formattedDate.includes("/")
+          ? formattedDate.split("/")
           : [match[1].slice(8, 10), match[1].slice(5, 7), match[1].slice(0, 4)];
         setHandoverDate(`${yyyy}-${mm}-${dd}`);
         setShift(match[2].toLowerCase() === "nights" ? "nights" : "days");
@@ -183,7 +188,7 @@ export default function ProjectHandoverPage() {
 
       const { data: project } = await supabase
         .from("projects")
-        .select("name")
+        .select("name, start_date, end_date")
         .eq("tenant_id", profile.tenant_id)
         .eq("id", projectId)
         .maybeSingle();
@@ -202,7 +207,7 @@ export default function ProjectHandoverPage() {
         if (!existing || !active) return;
 
         setCurrentHandoverId(existing.id);
-        hydrateHandoverForm(existing.notes || "");
+        hydrateHandoverForm(existing.notes || "", project?.start_date, project?.end_date);
         await loadSavedPhotos(profile.tenant_id, existing.id);
         return;
       }
@@ -225,7 +230,7 @@ export default function ProjectHandoverPage() {
       }
 
       setCurrentHandoverId(current.id);
-      hydrateHandoverForm(current.notes || "");
+      hydrateHandoverForm(current.notes || "", project?.start_date, project?.end_date);
 
       await loadSavedPhotos(profile.tenant_id, current.id);
     }

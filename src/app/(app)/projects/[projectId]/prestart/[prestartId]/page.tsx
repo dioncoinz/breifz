@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { formatDateTimeAU } from "@/lib/date";
+import { formatDateTimeAU, formatLogEntryDateDDMMYYYY } from "@/lib/date";
 
 export default async function PrestartLogDetailPage({
   params,
@@ -26,7 +26,7 @@ export default async function PrestartLogDetailPage({
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, name")
+    .select("id, name, start_date, end_date")
     .eq("tenant_id", profile.tenant_id)
     .eq("id", projectId)
     .single();
@@ -51,7 +51,14 @@ export default async function PrestartLogDetailPage({
   const titleLine = notesText
     .split("\n")
     .find((line: string) => line.trim().startsWith("Prestart:"));
-  const title = titleLine ? titleLine.replace("Prestart:", "").trim() : "Prestart log";
+  const titleMatch = titleLine?.match(
+    /prestart[:\s-]*([0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{2}\/[0-9]{2}\/[0-9]{4})\s*-\s*(days|nights)/i
+  );
+  const title = titleMatch
+    ? `${formatLogEntryDateDDMMYYYY(titleMatch[1], project.start_date, project.end_date)} - ${
+        titleMatch[2][0].toUpperCase() + titleMatch[2].slice(1).toLowerCase()
+      }`
+    : titleLine ? titleLine.replace("Prestart:", "").trim() : "Prestart log";
 
   return (
     <main style={{ maxWidth: 860 }}>
