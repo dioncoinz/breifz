@@ -487,7 +487,7 @@ export default function ProjectHandoverPage() {
 
     const narrative = buildNarrative();
 
-    let handover;
+    let handover: { id: string } | null = null;
     let handoverError;
 
     if (currentHandoverId) {
@@ -497,11 +497,10 @@ export default function ProjectHandoverPage() {
         .eq("id", currentHandoverId)
         .eq("tenant_id", tenantId)
         .eq("project_id", projectId)
-        .eq("created_by", user.id)
-        .select("id")
-        .single();
-      handover = result.data;
-      handoverError = result.error;
+        .select("id");
+      handover = result.data?.[0] || null;
+      handoverError =
+        result.error || (!handover ? new Error("Could not find that handover to update.") : null);
     } else {
       const result = await supabase
         .from("handovers")
